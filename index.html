@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>知予的 2026 虛幻彼方</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
+        
+        * { touch-action: manipulation; box-sizing: border-box; }
+
+        body { 
+            background: #f4f1ea; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            height: 100vh; 
+            margin: 0; 
+            padding: 10px;
+            font-family: 'Kiwi Maru', serif; 
+            overflow: hidden; 
+        }
+
+        /* 主容器：左邊圈圈 + 中間遊戲 + 右邊分數 */
+        .main-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 左邊：5個圈圈排成一列 */
+        .left-sidebar { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            min-width: 60px;
+        }
+
+        .circle { 
+            width: 55px; height: 55px; 
+            border: 2px solid #d1b3e0; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            background: white; overflow: hidden; font-size: 18px; color: #d1b3e0;
+        }
+        .circle.active { border-color: #b393c5; box-shadow: 0 0 8px #d1b3e0; }
+        .circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 中間：遊戲區域 */
+        .game-container { 
+            padding: 12px; 
+            background: #d1b3e0; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        canvas { 
+            background: #000; 
+            border-radius: 8px; 
+            display: block; 
+            max-height: 60vh; 
+            width: auto;
+            max-width: 80vw;
+        }
+
+        /* 右邊：分數與按鈕 */
+        .right-sidebar { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+            min-width: 80px;
+        }
+        .info-label { font-size: 18px; color: #6c5ce7; font-weight: bold; }
+        .score-display { font-size: 26px; color: #555; font-weight: 500; }
+        
+        #startBtn { 
+            padding: 12px 20px; 
+            background: #55efc4; 
+            border: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 2px 2px 0px #00b894;
+            font-family: 'Kiwi Maru', serif;
+        }
+        #startBtn:active { transform: translate(1px, 1px); box-shadow: none; }
+
+        /* 底部：手機控制鍵（一橫排） */
+        .controls-row { 
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            margin-top: 25px;
+        }
+        .btn { 
+            width: 55px; height: 55px; 
+            background: #fff; border: 2px solid #d1b3e0; 
+            border-radius: 15px; display: flex; align-items: center; 
+            justify-content: center; font-size: 24px; color: #6c5ce7; 
+            cursor: pointer;
+        }
+        .btn:active { background: #d1b3e0; color: white; }
+
+        .footer { margin-top: 15px; font-size: 12px; color: #999; letter-spacing: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+        <div class="left-sidebar">
+            <div id="c1" class="circle">1</div>
+            <div id="c2" class="circle">2</div>
+            <div id="c3" class="circle">3</div>
+            <div id="c4" class="circle">4</div>
+            <div id="c5" class="circle">5</div>
+        </div>
+
+        <div class="game-container">
+            <canvas id="snakeGame" width="600" height="600"></canvas>
+        </div>
+
+        <div class="right-sidebar">
+            <div class="info-label">Lv.<span id="levelVal">1</span></div>
+            <div id="scoreVal" class="score-display">0</div>
+            <button id="startBtn">START</button>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <div class="btn" onclick="changeDir('LEFT')">◀</div>
+        <div class="btn" onclick="changeDir('UP')">▲</div>
+        <div class="btn" onclick="changeDir('DOWN')">▼</div>
+        <div class="btn" onclick="changeDir('RIGHT')">▶</div>
+    </div>
+
+    <div class="footer">2026 虛幻彼方</div>
+
+    <script>
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("scoreVal");
+        const levelElement = document.getElementById("levelVal");
+        const startBtn = document.getElementById("startBtn");
+
+        const eatSound = new Audio('eat.mp3');
+        const failSound = new Audio('fail.mp3');
+
+        const heads = []; const foods = [];
+        for(let i=1; i<=5; i++) {
+            heads[i] = new Image(); heads[i].src = `head${i}.png`;
+            foods[i] = new Image(); foods[i].src = `food${i}.png`;
+        }
+
+        const box = 25; 
+        let snake, food, d, score, level, speed, gameLoop;
+
+        function init() {
+            snake = [{x: 10 * box, y: 10 * box}];
+            score = 0; level = 1; speed = 180; d = null;
+            generateFood();
+            updateUI();
+        }
+
+        function generateFood() {
+            food = { x: Math.floor(Math.random()*22+1)*box, y: Math.floor(Math.random()*22+1)*box };
+        }
+
+        function updateUI() {
+            scoreElement.innerText = score;
+            levelElement.innerText = level;
+            for(let i=1; i<=5; i++) {
+                const circle = document.getElementById(`c${i}`);
+                if(i <= level) {
+                    circle.classList.add('active');
+                    if(heads[i].complete && heads[i].naturalWidth !== 0) {
+                        circle.innerHTML = `<img src="head${i}.png">`;
+                    }
+                } else {
+                    circle.classList.remove('active');
+                    circle.innerHTML = i;
+                }
+            }
+        }
+
+        function changeDir(newDir) {
+            if(newDir == "LEFT" && d != "RIGHT") d = "LEFT";
+            if(newDir == "UP" && d != "DOWN") d = "UP";
+            if(newDir == "RIGHT" && d != "LEFT") d = "RIGHT";
+            if(newDir == "DOWN" && d != "UP") d = "DOWN";
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if(e.keyCode == 37) changeDir("LEFT");
+            if(e.keyCode == 38) changeDir("UP");
+            if(e.keyCode == 39) changeDir("RIGHT");
+            if(e.keyCode == 40) changeDir("DOWN");
+            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
+        }, false);
+
+        function draw() {
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let curFood = foods[Math.min(level, 5)];
+            if(curFood.complete && curFood.naturalWidth !== 0) {
+                ctx.drawImage(curFood, food.x, food.y, box, box);
+            } else {
+                ctx.fillStyle = "#ff7675"; ctx.fillRect(food.x, food.y, box, box);
+            }
+
+            for(let i = 0; i < snake.length; i++) {
+                if(i === 0) {
+                    let headSize = 40; 
+                    let offset = (headSize - box) / 2;
+                    let curHead = heads[Math.min(level, 5)];
+                    if(curHead.complete && curHead.naturalWidth !== 0) {
+                        ctx.drawImage(curHead, snake[i].x - offset, snake[i].y - offset, headSize, headSize);
+                    } else {
+                        ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                    }
+                } else {
+                    ctx.fillStyle = "#c8e6c9"; 
+                    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                }
+            }
+
+            if (!d) return;
+            let snakeX = snake[0].x; let snakeY = snake[0].y;
+            if(d == "LEFT") snakeX -= box; if(d == "UP") snakeY -= box;
+            if(d == "RIGHT") snakeX += box; if(d == "DOWN") snakeY += box;
+
+            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision({x: snakeX, y: snakeY}, snake)) {
+                clearInterval(gameLoop);
+                failSound.play().catch(()=>{});
+                alert("挑戰結束！");
+                init(); draw(); return;
+            }
+
+            if(snakeX == food.x && snakeY == food.y) {
+                score++;
+                eatSound.currentTime = 0; eatSound.play().catch(()=>{});
+                if(score % 10 === 0) { 
+                    level++;
+                    speed = Math.max(70, speed - 20);
+                    clearInterval(gameLoop); gameLoop = setInterval(draw, speed);
+                }
+                updateUI(); generateFood();
+            } else { snake.pop(); }
+            snake.unshift({x: snakeX, y: snakeY});
+        }
+
+        function collision(head, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+
+        startBtn.addEventListener("click", () => {
+            init();
+            clearInterval(gameLoop);
+            gameLoop = setInterval(draw, speed);
+        });
+
+        window.onload = () => { init(); draw(); };
+    </script>
+</body>
+</html>
