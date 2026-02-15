@@ -278,8 +278,8 @@
                 score++;
                 eatSound.currentTime = 0; eatSound.play().catch(()=>{});
 
-                // --- 重要：彩蛋觸發條件 (Lv 5 且達到 5 分) ---
-                if(level === 1 && score === 5) {
+                // --- 重要：彩蛋觸發條件 (Lv 5 且達到 50 分) ---
+                if(level === 5 && score === 50) {
                     clearInterval(gameLoop);
                     wishSound.play().catch(()=>{});
                     eggWrapper.style.display = "block";
