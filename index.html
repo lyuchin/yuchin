@@ -14,43 +14,42 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center;
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0; 
             padding: 10px;
             font-family: 'Kiwi Maru', serif; 
-            overflow: hidden; 
         }
 
-        /* 主容器：左邊圈圈 + 中間遊戲 + 右邊分數 */
-        .main-layout {
+        /* 頂部容器：自動適應排版 */
+        .container {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 20px;
             width: 100%;
+            max-width: 900px;
         }
 
-        /* 左邊：5個圈圈排成一列 */
-        .left-sidebar { 
+        /* 電腦版側邊欄 / 手機版頂部欄 */
+        .sidebar { 
             display: flex; 
             flex-direction: column; 
             gap: 10px; 
-            min-width: 60px;
+            align-items: center;
+            min-width: 70px;
         }
 
         .circle { 
-            width: 55px; height: 55px; 
+            width: 50px; height: 50px; 
             border: 2px solid #d1b3e0; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            background: white; overflow: hidden; font-size: 18px; color: #d1b3e0;
+            background: white; overflow: hidden; font-size: 16px; color: #d1b3e0;
         }
         .circle.active { border-color: #b393c5; box-shadow: 0 0 8px #d1b3e0; }
         .circle img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 中間：遊戲區域 */
-        .game-container { 
-            padding: 12px; 
+        .game-wrapper { 
+            padding: 10px; 
             background: #d1b3e0; 
             border-radius: 20px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -60,57 +59,66 @@
             background: #000; 
             border-radius: 8px; 
             display: block; 
-            max-height: 60vh; 
+            max-width: 90vw; 
+            max-height: 55vh;
             width: auto;
-            max-width: 80vw;
+            height: auto;
         }
 
-        /* 右邊：分數與按鈕 */
-        .right-sidebar { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 15px; 
-            min-width: 80px;
-        }
+        .info-panel { text-align: center; }
         .info-label { font-size: 18px; color: #6c5ce7; font-weight: bold; }
-        .score-display { font-size: 26px; color: #555; font-weight: 500; }
+        .score-display { font-size: 24px; color: #555; }
         
         #startBtn { 
-            padding: 12px 20px; 
+            padding: 10px 20px; 
             background: #55efc4; 
             border: none; 
-            border-radius: 15px; 
+            border-radius: 12px; 
             font-weight: bold; 
             cursor: pointer; 
             box-shadow: 2px 2px 0px #00b894;
-            font-family: 'Kiwi Maru', serif;
+            margin: 10px 0;
         }
-        #startBtn:active { transform: translate(1px, 1px); box-shadow: none; }
 
-        /* 底部：手機控制鍵（一橫排） */
-        .controls-row { 
-            display: flex; 
-            justify-content: center; 
-            gap: 15px; 
-            margin-top: 25px;
+        /* --- 手機版 RWD 調整 --- */
+        @media (max-width: 768px) {
+            body { overflow-y: auto; justify-content: flex-start; }
+            .container { flex-direction: column; gap: 10px; }
+            .sidebar { flex-direction: row; order: 1; min-width: auto; }
+            .game-wrapper { order: 2; }
+            .right-side { order: 1; flex-direction: row; gap: 20px; width: 100%; justify-content: center; }
+            .circle { width: 45px; height: 45px; }
+        }
+
+        /* --- 放射狀按鈕 (十字排法) --- */
+        .controls-cross { 
+            display: grid; 
+            grid-template-columns: repeat(3, 60px); 
+            grid-template-rows: repeat(2, 60px); 
+            gap: 10px; 
+            margin-top: 20px;
+            order: 3;
         }
         .btn { 
-            width: 55px; height: 55px; 
-            background: #fff; border: 2px solid #d1b3e0; 
-            border-radius: 15px; display: flex; align-items: center; 
+            width: 60px; height: 60px; 
+            background: white; border: 2px solid #d1b3e0; 
+            border-radius: 50%; display: flex; align-items: center; 
             justify-content: center; font-size: 24px; color: #6c5ce7; 
-            cursor: pointer;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
         .btn:active { background: #d1b3e0; color: white; }
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
 
-        .footer { margin-top: 15px; font-size: 12px; color: #999; letter-spacing: 4px; }
+        .footer { margin-top: 15px; font-size: 12px; color: #999; order: 4; }
     </style>
 </head>
 <body>
 
-    <div class="main-layout">
-        <div class="left-sidebar">
+    <div class="container">
+        <div class="sidebar left-side">
             <div id="c1" class="circle">1</div>
             <div id="c2" class="circle">2</div>
             <div id="c3" class="circle">3</div>
@@ -118,27 +126,30 @@
             <div id="c5" class="circle">5</div>
         </div>
 
-        <div class="game-container">
+        <div class="game-wrapper">
             <canvas id="snakeGame" width="600" height="600"></canvas>
         </div>
 
-        <div class="right-sidebar">
-            <div class="info-label">Lv.<span id="levelVal">1</span></div>
-            <div id="scoreVal" class="score-display">0</div>
+        <div class="sidebar right-side">
+            <div class="info-panel">
+                <div class="info-label">Lv.<span id="levelVal">1</span></div>
+                <div id="scoreVal" class="score-display">0</div>
+            </div>
             <button id="startBtn">START</button>
         </div>
     </div>
 
-    <div class="controls-row">
-        <div class="btn" onclick="changeDir('LEFT')">◀</div>
-        <div class="btn" onclick="changeDir('UP')">▲</div>
-        <div class="btn" onclick="changeDir('DOWN')">▼</div>
-        <div class="btn" onclick="changeDir('RIGHT')">▶</div>
+    <div class="controls-cross">
+        <div class="btn btn-up" onclick="changeDir('UP')">▲</div>
+        <div class="btn btn-left" onclick="changeDir('LEFT')">◀</div>
+        <div class="btn btn-down" onclick="changeDir('DOWN')">▼</div>
+        <div class="btn btn-right" onclick="changeDir('RIGHT')">▶</div>
     </div>
 
     <div class="footer">2026 虛幻彼方</div>
 
     <script>
+        // ... (Script 邏輯維持之前穩定的版本即可，主要是 CSS 的改變)
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("scoreVal");
