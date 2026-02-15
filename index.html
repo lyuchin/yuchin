@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 虛幻彼方貪吃蛇小遊戲</title>
+    <title>2026 虛幻彼方 - 賀歲彩蛋版</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
         
@@ -20,7 +20,7 @@
             font-family: 'Kiwi Maru', serif; 
         }
 
-        /* 頂部容器：自動適應排版 */
+        /* 主容器 */
         .container {
             display: flex;
             align-items: center;
@@ -28,9 +28,10 @@
             gap: 20px;
             width: 100%;
             max-width: 900px;
+            position: relative;
         }
 
-        /* 電腦版側邊欄 / 手機版頂部欄 */
+        /* 側邊欄：進化圈圈 */
         .sidebar { 
             display: flex; 
             flex-direction: column; 
@@ -48,11 +49,13 @@
         .circle.active { border-color: #b393c5; box-shadow: 0 0 8px #d1b3e0; }
         .circle img { width: 100%; height: 100%; object-fit: cover; }
 
+        /* 遊戲框 */
         .game-wrapper { 
             padding: 10px; 
             background: #d1b3e0; 
             border-radius: 20px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         canvas { 
@@ -60,9 +63,29 @@
             border-radius: 8px; 
             display: block; 
             max-width: 90vw; 
-            max-height: 55vh;
+            max-height: 50vh;
             width: auto;
             height: auto;
+        }
+
+        /* 彩蛋大圖容器 (平常隱藏) */
+        #eggWrapper {
+            display: none; 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            z-index: 100;
+            background: rgba(244, 241, 234, 0.95);
+            border-radius: 20px;
+            text-align: center;
+            padding: 20px;
+        }
+        #eggImage {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         .info-panel { text-align: center; }
@@ -71,33 +94,25 @@
         
         #startBtn { 
             padding: 10px 20px; 
-            background: #55efc4; 
-            border: none; 
-            border-radius: 12px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            box-shadow: 2px 2px 0px #00b894;
-            margin: 10px 0;
+            background: #55efc4; border: none; 
+            border-radius: 12px; font-weight: bold; cursor: pointer; 
+            box-shadow: 2px 2px 0px #00b894; margin: 10px 0;
         }
 
-        /* --- 手機版 RWD 調整 --- */
+        /* 手機 RWD 排版切換 */
         @media (max-width: 768px) {
-            body { overflow-y: auto; justify-content: flex-start; }
             .container { flex-direction: column; gap: 10px; }
             .sidebar { flex-direction: row; order: 1; min-width: auto; }
             .game-wrapper { order: 2; }
             .right-side { order: 1; flex-direction: row; gap: 20px; width: 100%; justify-content: center; }
-            .circle { width: 45px; height: 45px; }
         }
 
-        /* --- 放射狀按鈕 (十字排法) --- */
+        /* 放射狀十字方向鍵 */
         .controls-cross { 
             display: grid; 
             grid-template-columns: repeat(3, 60px); 
             grid-template-rows: repeat(2, 60px); 
-            gap: 10px; 
-            margin-top: 20px;
-            order: 3;
+            gap: 10px; margin-top: 20px; order: 3;
         }
         .btn { 
             width: 60px; height: 60px; 
@@ -128,6 +143,12 @@
 
         <div class="game-wrapper">
             <canvas id="snakeGame" width="600" height="600"></canvas>
+            
+            <div id="eggWrapper">
+                <img id="eggImage" src="gift.png">
+                <p id="wishText" style="margin-top:15px; font-weight:bold; color:#6c5ce7; font-size:20px;">祝妳一切都馬順利！！</p>
+                <button onclick="location.reload()" style="background:#55efc4; border:none; padding:8px 15px; border-radius:10px; cursor:pointer;">再玩一次</button>
+            </div>
         </div>
 
         <div class="sidebar right-side">
@@ -149,15 +170,17 @@
     <div class="footer">2026 虛幻彼方</div>
 
     <script>
-        // ... (Script 邏輯維持之前穩定的版本即可，主要是 CSS 的改變)
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("scoreVal");
         const levelElement = document.getElementById("levelVal");
         const startBtn = document.getElementById("startBtn");
+        const eggWrapper = document.getElementById("eggWrapper");
 
+        // 音效區
         const eatSound = new Audio('eat.mp3');
         const failSound = new Audio('fail.mp3');
+        const wishSound = new Audio('wish.wav'); // 妳的祝福音效
 
         const heads = []; const foods = [];
         for(let i=1; i<=5; i++) {
@@ -171,6 +194,7 @@
         function init() {
             snake = [{x: 10 * box, y: 10 * box}];
             score = 0; level = 1; speed = 180; d = null;
+            eggWrapper.style.display = "none"; 
             generateFood();
             updateUI();
         }
@@ -253,6 +277,15 @@
             if(snakeX == food.x && snakeY == food.y) {
                 score++;
                 eatSound.currentTime = 0; eatSound.play().catch(()=>{});
+
+                // --- 重要：彩蛋觸發條件 (Lv 5 且達到 5 分) ---
+                if(level === 1 && score === 5) {
+                    clearInterval(gameLoop);
+                    wishSound.play().catch(()=>{});
+                    eggWrapper.style.display = "block";
+                    return;
+                }
+
                 if(score % 10 === 0) { 
                     level++;
                     speed = Math.max(70, speed - 20);
@@ -271,6 +304,10 @@
         }
 
         startBtn.addEventListener("click", () => {
+            // 解鎖所有音效
+            eatSound.play().then(()=>eatSound.pause());
+            failSound.play().then(()=>failSound.pause());
+            wishSound.play().then(()=>wishSound.pause());
             init();
             clearInterval(gameLoop);
             gameLoop = setInterval(draw, speed);
