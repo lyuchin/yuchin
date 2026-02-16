@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -7,37 +7,113 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
         * { touch-action: manipulation; box-sizing: border-box; }
-        body { background: #f4f1ea; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 10px; font-family: 'Kiwi Maru', serif; overflow: hidden; }
-        .main-layout { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; }
-        .left-sidebar { display: flex; flex-direction: column; gap: 10px; min-width: 60px; }
-        .circle { width: 55px; height: 55px; border: 2px solid #d1b3e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; }
+        
+        body { 
+            background: #f4f1ea; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 10px; 
+            font-family: 'Kiwi Maru', serif; 
+        }
+
+        /* --- 響應式佈局架構 --- */
+        .main-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            flex-wrap: wrap; /* 關鍵：讓手機版可以自動折行 */
+        }
+
+        /* 左側與右側邊欄在電腦版的設定 */
+        .left-sidebar, .right-sidebar {
+            display: flex;
+            gap: 10px;
+            min-width: 60px;
+        }
+        .left-sidebar { flex-direction: column; }
+        .right-sidebar { flex-direction: column; align-items: center; gap: 15px; }
+
+        /* 手機版自動調整：當螢幕寬度小於 800px 時 */
+        @media (max-width: 800px) {
+            .main-layout { flex-direction: column; gap: 10px; }
+            .left-sidebar { 
+                flex-direction: row; /* 圈圈改排成一橫列 */
+                justify-content: center;
+                order: 1; /* 排在最上面 */
+            }
+            .right-sidebar { 
+                flex-direction: row; /* 分數與按鈕改排成一橫列 */
+                justify-content: center;
+                order: 2; /* 排在圈圈下面 */
+                width: 100%;
+            }
+            .game-container { order: 3; } /* 遊戲框架在中間 */
+            .controls-row { order: 4; } /* 按鈕在最下面 */
+            
+            canvas { max-height: 50vh; } /* 縮小一點點畫布，留空間給按鈕 */
+        }
+
+        .circle { 
+            width: 55px; height: 55px; 
+            border: 2px solid #d1b3e0; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            background: white; overflow: hidden; 
+        }
         .circle.active { border-color: #b393c5; box-shadow: 0 0 8px #d1b3e0; }
         .circle img { width: 100%; height: 100%; object-fit: cover; }
-        .game-container { padding: 12px; background: #d1b3e0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
-        canvas { background: #000; border-radius: 8px; display: block; max-height: 60vh; width: auto; max-width: 80vw; }
-        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 15px; min-width: 80px; }
+
+        .game-container { 
+            padding: 12px; 
+            background: #d1b3e0; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            position: relative; 
+        }
+        
+        canvas { 
+            background: #000; 
+            border-radius: 8px; 
+            display: block; 
+            max-width: 85vw;
+            height: auto;
+        }
+
         .score-display { font-size: 26px; color: #555; font-weight: 500; }
-        #startBtn { padding: 12px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; z-index: 10; }
-        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        #startBtn { padding: 10px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; z-index: 10; }
+
+        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
         .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
+
+        /* 彩蛋彈窗與圖片優化 */
         #eggModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 25px; text-align: center; max-width: 85%; border: 4px solid #b393c5; }
-        .modal-content img { max-width: 100%; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
+        .modal-content { background: white; padding: 25px; border-radius: 25px; text-align: center; max-width: 90%; border: 4px solid #b393c5; }
+        .modal-content img { max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
         #continueBtn { padding: 12px 25px; background: #6c5ce7; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-family: 'Kiwi Maru', serif; }
-        .footer { margin-top: 15px; font-size: 12px; color: #999; letter-spacing: 4px; }
+        
+        .footer { margin-top: 10px; font-size: 12px; color: #999; letter-spacing: 4px; }
     </style>
 </head>
 <body>
 
     <div class="main-layout">
         <div class="left-sidebar">
-            <div id="c1" class="circle">1</div><div id="c2" class="circle">2</div>
-            <div id="c3" class="circle">3</div><div id="c4" class="circle">4</div>
+            <div id="c1" class="circle">1</div>
+            <div id="c2" class="circle">2</div>
+            <div id="c3" class="circle">3</div>
+            <div id="c4" class="circle">4</div>
             <div id="c5" class="circle">5</div>
         </div>
+
         <div class="game-container">
             <canvas id="snakeGame" width="600" height="600"></canvas>
         </div>
+
         <div class="right-sidebar">
             <div style="font-size:18px; color:#6c5ce7;">Lv.<span id="levelVal">1</span></div>
             <div id="scoreVal" class="score-display">0</div>
@@ -56,8 +132,8 @@
         <div class="modal-content">
             <h2 id="modalTitle" style="color:#6c5ce7; margin-top:0;">🌟 恭喜發財！</h2>
             <img id="modalImg" src="surprise.png" alt="彩蛋">
-            <p id="modalDesc">妳太厲害了!按方向鍵繼續挑戰50分的終極彩蛋</p>
-            <button id="continueBtn">快來按我</button>
+            <p id="modalDesc">按方向鍵繼續挑戰</p>
+            <button id="continueBtn">確認</button>
         </div>
     </div>
 
@@ -194,7 +270,7 @@
             congratsSound.play().catch(()=>{});
             modalTitle.innerText = "🌟 恭喜發財！";
             modalImg.src = "surprise.png";
-            modalDesc.innerText = "妳太厲害了!按方向鍵繼續挑戰50分的終極彩蛋";
+            modalDesc.innerText = "妳太厲害了!按方向鍵繼續挑戰50分的終極彩蛋!!";
             continueBtn.innerText = "快來按我";
             eggModal.style.display = "flex";
         }
