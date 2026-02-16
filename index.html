@@ -1,86 +1,163 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 虛幻彼方 賀歲彩蛋小遊戲</title>
+    <title>2026 虛幻彼方貪吃蛇小遊戲</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
+        
         * { touch-action: manipulation; box-sizing: border-box; }
-        body { background: #f4f1ea; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 10px; font-family: 'Kiwi Maru', serif; overflow: hidden; }
-        .main-layout { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; }
-        .left-sidebar { display: flex; flex-direction: column; gap: 10px; min-width: 60px; }
-        .circle { width: 55px; height: 55px; border: 2px solid #d1b3e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; }
+
+        body { 
+            background: #f4f1ea; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 10px;
+            font-family: 'Kiwi Maru', serif; 
+        }
+
+        /* 頂部容器：自動適應排版 */
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* 電腦版側邊欄 / 手機版頂部欄 */
+        .sidebar { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .circle { 
+            width: 50px; height: 50px; 
+            border: 2px solid #d1b3e0; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            background: white; overflow: hidden; font-size: 16px; color: #d1b3e0;
+        }
         .circle.active { border-color: #b393c5; box-shadow: 0 0 8px #d1b3e0; }
         .circle img { width: 100%; height: 100%; object-fit: cover; }
-        .game-container { padding: 12px; background: #d1b3e0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
-        canvas { background: #000; border-radius: 8px; display: block; max-height: 60vh; width: auto; max-width: 80vw; }
-        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 15px; min-width: 80px; }
-        .score-display { font-size: 26px; color: #555; font-weight: 500; }
-        #startBtn { padding: 12px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; z-index: 10; }
-        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
-        .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
-        #eggModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 25px; text-align: center; max-width: 85%; border: 4px solid #b393c5; }
-        .modal-content img { max-width: 100%; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
-        #continueBtn { padding: 12px 25px; background: #6c5ce7; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-family: 'Kiwi Maru', serif; }
-        .footer { margin-top: 15px; font-size: 12px; color: #999; letter-spacing: 4px; }
+
+        .game-wrapper { 
+            padding: 10px; 
+            background: #d1b3e0; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        canvas { 
+            background: #000; 
+            border-radius: 8px; 
+            display: block; 
+            max-width: 90vw; 
+            max-height: 55vh;
+            width: auto;
+            height: auto;
+        }
+
+        .info-panel { text-align: center; }
+        .info-label { font-size: 18px; color: #6c5ce7; font-weight: bold; }
+        .score-display { font-size: 24px; color: #555; }
+        
+        #startBtn { 
+            padding: 10px 20px; 
+            background: #55efc4; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 2px 2px 0px #00b894;
+            margin: 10px 0;
+        }
+
+        /* --- 手機版 RWD 調整 --- */
+        @media (max-width: 768px) {
+            body { overflow-y: auto; justify-content: flex-start; }
+            .container { flex-direction: column; gap: 10px; }
+            .sidebar { flex-direction: row; order: 1; min-width: auto; }
+            .game-wrapper { order: 2; }
+            .right-side { order: 1; flex-direction: row; gap: 20px; width: 100%; justify-content: center; }
+            .circle { width: 45px; height: 45px; }
+        }
+
+        /* --- 放射狀按鈕 (十字排法) --- */
+        .controls-cross { 
+            display: grid; 
+            grid-template-columns: repeat(3, 60px); 
+            grid-template-rows: repeat(2, 60px); 
+            gap: 10px; 
+            margin-top: 20px;
+            order: 3;
+        }
+        .btn { 
+            width: 60px; height: 60px; 
+            background: white; border: 2px solid #d1b3e0; 
+            border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; font-size: 24px; color: #6c5ce7; 
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { background: #d1b3e0; color: white; }
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+
+        .footer { margin-top: 15px; font-size: 12px; color: #999; order: 4; }
     </style>
 </head>
 <body>
 
-    <div class="main-layout">
-        <div class="left-sidebar">
-            <div id="c1" class="circle">1</div><div id="c2" class="circle">2</div>
-            <div id="c3" class="circle">3</div><div id="c4" class="circle">4</div>
+    <div class="container">
+        <div class="sidebar left-side">
+            <div id="c1" class="circle">1</div>
+            <div id="c2" class="circle">2</div>
+            <div id="c3" class="circle">3</div>
+            <div id="c4" class="circle">4</div>
             <div id="c5" class="circle">5</div>
         </div>
-        <div class="game-container">
+
+        <div class="game-wrapper">
             <canvas id="snakeGame" width="600" height="600"></canvas>
         </div>
-        <div class="right-sidebar">
-            <div style="font-size:18px; color:#6c5ce7;">Lv.<span id="levelVal">1</span></div>
-            <div id="scoreVal" class="score-display">0</div>
+
+        <div class="sidebar right-side">
+            <div class="info-panel">
+                <div class="info-label">Lv.<span id="levelVal">1</span></div>
+                <div id="scoreVal" class="score-display">0</div>
+            </div>
             <button id="startBtn">START</button>
         </div>
     </div>
 
-    <div class="controls-row">
-        <div class="btn" onclick="handleInput('LEFT')">◀</div>
-        <div class="btn" onclick="handleInput('UP')">▲</div>
-        <div class="btn" onclick="handleInput('DOWN')">▼</div>
-        <div class="btn" onclick="handleInput('RIGHT')">▶</div>
-    </div>
-
-    <div id="eggModal">
-        <div class="modal-content">
-            <h2 id="modalTitle" style="color:#6c5ce7; margin-top:0;">🌟 恭喜發財！</h2>
-            <img id="modalImg" src="surprise.png" alt="彩蛋">
-            <p id="modalDesc">妳太厲害了!按方向鍵繼續挑戰50分的終極彩蛋!!</p>
-            <button id="continueBtn">快來按我</button>
-        </div>
+    <div class="controls-cross">
+        <div class="btn btn-up" onclick="changeDir('UP')">▲</div>
+        <div class="btn btn-left" onclick="changeDir('LEFT')">◀</div>
+        <div class="btn btn-down" onclick="changeDir('DOWN')">▼</div>
+        <div class="btn btn-right" onclick="changeDir('RIGHT')">▶</div>
     </div>
 
     <div class="footer">2026 虛幻彼方</div>
 
     <script>
+        // ... (Script 邏輯維持之前穩定的版本即可，主要是 CSS 的改變)
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("scoreVal");
         const levelElement = document.getElementById("levelVal");
         const startBtn = document.getElementById("startBtn");
-        const eggModal = document.getElementById("eggModal");
-        const continueBtn = document.getElementById("continueBtn");
-        const modalImg = document.getElementById("modalImg");
-        const modalTitle = document.getElementById("modalTitle");
-        const modalDesc = document.getElementById("modalDesc");
 
         const eatSound = new Audio('eat.mp3');
         const failSound = new Audio('fail.mp3');
-        const congratsSound = new Audio('congrats.wav');
-        const wishSound = new Audio('wish.wav');
-
-        const TARGET_WIN = 50; 
 
         const heads = []; const foods = [];
         for(let i=1; i<=5; i++) {
@@ -89,17 +166,13 @@
         }
 
         const box = 25; 
-        let snake, food, d, score, level, speed, gameLoop = null;
-        let isWaiting = true; let isFinished = false;
+        let snake, food, d, score, level, speed, gameLoop;
 
         function init() {
-            if(gameLoop) { clearInterval(gameLoop); gameLoop = null; }
             snake = [{x: 10 * box, y: 10 * box}];
             score = 0; level = 1; speed = 180; d = null;
-            isWaiting = true; isFinished = false;
-            generateFood(); 
-            updateUI(); 
-            drawStatic();
+            generateFood();
+            updateUI();
         }
 
         function generateFood() {
@@ -113,42 +186,55 @@
                 const circle = document.getElementById(`c${i}`);
                 if(i <= level) {
                     circle.classList.add('active');
-                    if(heads[i].complete) circle.innerHTML = `<img src="head${i}.png">`;
+                    if(heads[i].complete && heads[i].naturalWidth !== 0) {
+                        circle.innerHTML = `<img src="head${i}.png">`;
+                    }
                 } else {
-                    circle.classList.remove('active'); circle.innerHTML = i;
+                    circle.classList.remove('active');
+                    circle.innerHTML = i;
                 }
             }
         }
 
-        function handleInput(newDir) {
-            if(eggModal.style.display === "flex" || isFinished) return;
-            if(isWaiting) {
-                isWaiting = false;
-                if(!gameLoop) { gameLoop = setInterval(draw, speed); }
-            }
+        function changeDir(newDir) {
             if(newDir == "LEFT" && d != "RIGHT") d = "LEFT";
             if(newDir == "UP" && d != "DOWN") d = "UP";
             if(newDir == "RIGHT" && d != "LEFT") d = "RIGHT";
             if(newDir == "DOWN" && d != "UP") d = "DOWN";
         }
 
-        function draw() {
-            if(isWaiting || eggModal.style.display === "flex") return;
+        document.addEventListener("keydown", (e) => {
+            if(e.keyCode == 37) changeDir("LEFT");
+            if(e.keyCode == 38) changeDir("UP");
+            if(e.keyCode == 39) changeDir("RIGHT");
+            if(e.keyCode == 40) changeDir("DOWN");
+            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
+        }, false);
 
-            ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function draw() {
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
-            else { ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box); }
+            if(curFood.complete && curFood.naturalWidth !== 0) {
+                ctx.drawImage(curFood, food.x, food.y, box, box);
+            } else {
+                ctx.fillStyle = "#ff7675"; ctx.fillRect(food.x, food.y, box, box);
+            }
 
             for(let i = 0; i < snake.length; i++) {
-                let headSize = (i === 0) ? 40 : 25;
-                let offset = (headSize - box) / 2;
                 if(i === 0) {
+                    let headSize = 40; 
+                    let offset = (headSize - box) / 2;
                     let curHead = heads[Math.min(level, 5)];
-                    if(curHead.complete) ctx.drawImage(curHead, snake[i].x - offset, snake[i].y - offset, headSize, headSize);
-                    else { ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box); }
+                    if(curHead.complete && curHead.naturalWidth !== 0) {
+                        ctx.drawImage(curHead, snake[i].x - offset, snake[i].y - offset, headSize, headSize);
+                    } else {
+                        ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                    }
                 } else {
-                    ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                    ctx.fillStyle = "#c8e6c9"; 
+                    ctx.fillRect(snake[i].x, snake[i].y, box, box);
                 }
             }
 
@@ -158,88 +244,24 @@
             if(d == "RIGHT") snakeX += box; if(d == "DOWN") snakeY += box;
 
             if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision({x: snakeX, y: snakeY}, snake)) {
-                clearInterval(gameLoop); gameLoop = null;
+                clearInterval(gameLoop);
                 failSound.play().catch(()=>{});
-                alert("挑戰結束！"); init(); return;
+                alert("挑戰結束！");
+                init(); draw(); return;
             }
 
             if(snakeX == food.x && snakeY == food.y) {
                 score++;
                 eatSound.currentTime = 0; eatSound.play().catch(()=>{});
-                
-                if(score % 10 === 0 && score < TARGET_WIN) { 
+                if(score % 10 === 0) { 
                     level++;
-                    speed = (level >= 5) ? 110 : Math.max(80, speed - 20);
+                    speed = Math.max(70, speed - 20);
+                    clearInterval(gameLoop); gameLoop = setInterval(draw, speed);
                 }
-                
-                updateUI(); 
-
-                if(score === TARGET_WIN) {
-                    showFinalEnding(); return;
-                } else if(score === 10) {
-                    showSurprise(); return; 
-                }
-
-                if(score % 10 === 0) {
-                    clearInterval(gameLoop);
-                    gameLoop = setInterval(draw, speed);
-                }
-                generateFood();
+                updateUI(); generateFood();
             } else { snake.pop(); }
             snake.unshift({x: snakeX, y: snakeY});
         }
-
-        function showSurprise() {
-            clearInterval(gameLoop); gameLoop = null;
-            congratsSound.play().catch(()=>{});
-            modalTitle.innerText = "🌟 恭喜發財！";
-            modalImg.src = "surprise.png";
-            modalDesc.innerText = "妳太厲害了!按方向鍵繼續挑戰50分的終極彩蛋!!";
-            continueBtn.innerText = "快來按我";
-            eggModal.style.display = "flex";
-        }
-
-        function showFinalEnding() {
-            clearInterval(gameLoop); gameLoop = null;
-            isFinished = true;
-            updateUI();
-            wishSound.play().catch(()=>{}); 
-            modalTitle.innerText = "🎊 完美大通關！";
-            modalImg.src = "gift.png";
-            modalDesc.innerText = "祝妳馬到成功，萬事順意！❤️";
-            continueBtn.innerText = "重玩遊戲";
-            eggModal.style.display = "flex";
-        }
-
-        function drawStatic() {
-            ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            let headSize = 40; let offset = (headSize - box) / 2;
-            let curHead = heads[Math.min(level, 5)];
-            if(curHead && curHead.complete) ctx.drawImage(curHead, snake[0].x - offset, snake[0].y - offset, headSize, headSize);
-            let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
-        }
-
-        continueBtn.onclick = function() {
-            eggModal.style.display = "none";
-            if(!isFinished) {
-                isWaiting = true;
-                drawStatic();
-            } else {
-                init();
-            }
-        };
-
-        startBtn.onclick = function() {
-            eatSound.play().then(()=>eatSound.pause()).catch(()=>{});
-            init();
-        };
-
-        document.addEventListener("keydown", (e) => {
-            let keyMap = {37:'LEFT', 38:'UP', 39:'RIGHT', 40:'DOWN'};
-            if(keyMap[e.keyCode]) handleInput(keyMap[e.keyCode]);
-            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
-        });
 
         function collision(head, array) {
             for(let i = 0; i < array.length; i++) {
@@ -248,7 +270,13 @@
             return false;
         }
 
-        window.onload = () => { init(); };
+        startBtn.addEventListener("click", () => {
+            init();
+            clearInterval(gameLoop);
+            gameLoop = setInterval(draw, speed);
+        });
+
+        window.onload = () => { init(); draw(); };
     </script>
 </body>
 </html>
