@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 虛幻彼方 賀歲彩蛋小遊戲</title>
+    <title>知予的 2026 虛幻彼方</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
         * { touch-action: manipulation; box-sizing: border-box; }
@@ -18,7 +18,7 @@
             margin: 0; 
             padding: 10px; 
             font-family: 'Kiwi Maru', serif; 
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         .main-layout {
@@ -30,45 +30,35 @@
             flex-wrap: wrap;
         }
 
-        /* 側邊欄佈局 */
-        .left-sidebar { display: flex; gap: 10px; min-width: 120px; flex-direction: row; align-items: flex-start; }
-        .head-list, .food-list { display: flex; flex-direction: column; gap: 10px; }
-        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 15px; min-width: 80px; }
+        .left-sidebar, .right-sidebar { display: flex; gap: 10px; min-width: 60px; }
+        .left-sidebar { flex-direction: column; }
+        .right-sidebar { flex-direction: column; align-items: center; gap: 15px; }
 
         @media (max-width: 800px) {
             .main-layout { flex-direction: column; gap: 10px; }
-            .left-sidebar { flex-direction: column; align-items: center; order: 1; }
-            .head-list, .food-list { flex-direction: row; justify-content: center; }
+            .left-sidebar { flex-direction: row; justify-content: center; order: 1; }
             .right-sidebar { flex-direction: row; justify-content: center; order: 2; width: 100%; }
             .game-container { order: 3; }
             .controls-row { order: 4; }
-            canvas { max-height: 40vh; }
+            canvas { max-height: 45vh; }
         }
 
-        /* 蛇頭圈圈 (原尺寸) */
         .circle { 
             width: 55px; height: 55px; 
             border: 2px solid #d1b3e0; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            background: white; overflow: hidden; position: relative;
+            background: white; overflow: hidden; 
+            position: relative;
         }
         .circle img { 
             width: 100%; height: 100%; object-fit: cover; 
             filter: grayscale(100%) opacity(30%);
             transition: all 0.5s ease;
         }
+        .circle.active { border-color: #b393c5; box-shadow: 0 0 10px #d1b3e0; }
         .circle.active img { filter: grayscale(0%) opacity(100%); }
-        .level-num { position: absolute; font-weight: bold; color: #d1b3e0; z-index: 2; font-size: 14px; }
+        .level-num { position: absolute; font-weight: bold; color: #d1b3e0; z-index: 2; }
         .circle.active .level-num { display: none; }
-
-        /* 水果圈圈 (1/3 尺寸) */
-        .food-circle { 
-            width: 45px; height: 45px; 
-            border: 1.5px solid #d1b3e0; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            background: white; overflow: hidden;
-        }
-        .food-circle img { width: 80%; height:80%; object-fit: contain; }
 
         .game-container { 
             padding: 12px; 
@@ -81,7 +71,6 @@
         canvas { background: #000; border-radius: 8px; display: block; max-width: 85vw; height: auto; }
         .score-display { font-size: 26px; color: #555; font-weight: 500; }
         #startBtn { padding: 10px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; }
-
         .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
         .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
 
@@ -90,29 +79,19 @@
         .modal-content img { max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
         #continueBtn { padding: 12px 25px; background: #6c5ce7; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-family: 'Kiwi Maru', serif; }
         
-        /* 計數器樣式 */
         .footer { margin-top: 10px; font-size: 12px; color: #999; letter-spacing: 2px; text-align: center; }
-        .counter-img { vertical-align: middle; margin-left: 5px; height: 20px; }
+        .counter-img { vertical-align: middle; margin-left: 5px; height: 22px; }
     </style>
 </head>
 <body>
 
     <div class="main-layout">
         <div class="left-sidebar">
-            <div class="head-list">
-                <div id="c1" class="circle"><span class="level-num">1</span><img src="head1.png"></div>
-                <div id="c2" class="circle"><span class="level-num">2</span><img src="head2.png"></div>
-                <div id="c3" class="circle"><span class="level-num">3</span><img src="head3.png"></div>
-                <div id="c4" class="circle"><span class="level-num">4</span><img src="head4.png"></div>
-                <div id="c5" class="circle"><span class="level-num">5</span><img src="head5.png"></div>
-            </div>
-            <div class="food-list">
-                <div class="food-circle"><img src="food1.png"></div>
-                <div class="food-circle"><img src="food2.png"></div>
-                <div class="food-circle"><img src="food3.png"></div>
-                <div class="food-circle"><img src="food4.png"></div>
-                <div class="food-circle"><img src="food5.png"></div>
-            </div>
+            <div id="c1" class="circle"><span class="level-num">1</span><img src="head1.png"></div>
+            <div id="c2" class="circle"><span class="level-num">2</span><img src="head2.png"></div>
+            <div id="c3" class="circle"><span class="level-num">3</span><img src="head3.png"></div>
+            <div id="c4" class="circle"><span class="level-num">4</span><img src="head4.png"></div>
+            <div id="c5" class="circle"><span class="level-num">5</span><img src="head5.png"></div>
         </div>
 
         <div class="game-container">
@@ -137,14 +116,16 @@
         <div class="modal-content">
             <h2 id="modalTitle">🌟 恭喜發財！</h2>
             <img id="modalImg" src="surprise.png">
-            <p id="modalDesc">厲害!按方向鍵繼續收集50分的終極彩蛋!!</p>
-            <button id="continueBtn">幸運鈕</button>
+            <p id="modalDesc">按方向鍵繼續挑戰</p>
+            <button id="continueBtn">確認</button>
         </div>
     </div>
 
-    <div class="footer"> © 林玉琴 2026 虛幻彼方</div>
-                         <img class="counter-img" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Flyuchin.github.io%2Fyuchin%2F&count_bg=%23D1B3E0&title_bg=%236C5CE7&icon=&icon_color=%23E7E7E7&title=VISITS&edge_flat=false" alt="計數器">
+    <div class="footer">
+        © 林玉琴 2026 虛幻彼方 | 
+        <img class="counter-img" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Flyuchin.github.io%2Fyuchin%2F&count_bg=%23D1B3E0&title_bg=%236C5CE7&icon=&icon_color=%23E7E7E7&title=VISITS&edge_flat=false" alt="計數器">
     </div>
+
     <script>
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
@@ -178,9 +159,7 @@
             snake = [{x: 10 * box, y: 10 * box}];
             score = 0; level = 1; speed = 220; d = null;
             isWaiting = true; isFinished = false;
-            generateFood(); 
-            updateUI(); 
-            drawStatic();
+            generateFood(); updateUI(); drawStatic();
         }
 
         function generateFood() {
@@ -212,6 +191,8 @@
         function draw() {
             if(isWaiting || eggModal.style.display === "flex") return;
             ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // --- 重新接回水果食物顯示邏輯 ---
             let curFood = foods[Math.min(level, 5)];
             if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
             else { ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box); }
@@ -249,10 +230,7 @@
                 updateUI(); 
                 if(score === TARGET_WIN) { showFinalEnding(); return; } 
                 else if(score === 10) { showSurprise(); return; }
-                if(score % 10 === 0) {
-                    clearInterval(gameLoop);
-                    gameLoop = setInterval(draw, speed);
-                }
+                if(score % 10 === 0) { clearInterval(gameLoop); gameLoop = setInterval(draw, speed); }
                 generateFood();
             } else { snake.pop(); }
             snake.unshift({x: snakeX, y: snakeY});
@@ -263,8 +241,8 @@
             congratsSound.play().catch(()=>{});
             modalTitle.innerText = "🌟 恭喜發財！";
             modalImg.src = "surprise.png";
-            modalDesc.innerText = "厲害!按方向鍵繼續收集50分的終極彩蛋!!";
-            continueBtn.innerText = "幸運鈕";
+            modalDesc.innerText = "按方向鍵繼續挑戰";
+            continueBtn.innerText = "確認";
             eggModal.style.display = "flex";
         }
 
@@ -295,7 +273,10 @@
             else { init(); }
         };
 
-        startBtn.onclick = function() { eatSound.play().then(()=>eatSound.pause()).catch(()=>{}); init(); };
+        startBtn.onclick = function() {
+            eatSound.play().then(()=>eatSound.pause()).catch(()=>{});
+            init();
+        };
 
         document.addEventListener("keydown", (e) => {
             let keyMap = {37:'LEFT', 38:'UP', 39:'RIGHT', 40:'DOWN'};
@@ -314,4 +295,5 @@
     </script>
 </body>
 </html>
-   
+ 
+     
