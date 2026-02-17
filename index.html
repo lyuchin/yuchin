@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -16,7 +16,7 @@
             justify-content: center; 
             min-height: 100vh; 
             margin: 0; 
-            padding: 5px; /* 縮小邊距 */
+            padding: 10px; 
             font-family: 'Kiwi Maru', serif; 
             overflow-x: hidden;
         }
@@ -25,35 +25,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 20px;
             width: 100%;
-            max-width: 1200px;
             flex-wrap: wrap;
         }
 
         /* 側邊欄佈局 */
-        .left-sidebar { display: flex; gap: 10px; min-width: 110px; flex-direction: row; align-items: flex-start; }
-        .head-list, .food-list { display: flex; flex-direction: column; gap: 8px; }
-        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 80px; }
+        .left-sidebar { display: flex; gap: 10px; min-width: 120px; flex-direction: row; align-items: flex-start; }
+        .head-list, .food-list { display: flex; flex-direction: column; gap: 10px; }
+        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 15px; min-width: 80px; }
 
         @media (max-width: 800px) {
-            .main-layout { flex-direction: column; gap: 5px; }
-            .left-sidebar { flex-direction: column; align-items: center; order: 1; min-width: auto; }
-            .head-list, .food-list { flex-direction: row; justify-content: center; gap: 5px; }
-            .right-sidebar { flex-direction: row; justify-content: center; order: 2; width: 100%; gap: 15px; }
-            .game-container { order: 3; width: 100%; display: flex; justify-content: center; }
-            .controls-row { order: 4; margin-top: 5px; }
-            
-            /* --- 關鍵修復：讓畫布在手機版變大 --- */
-            canvas { 
-                max-width: 95vw !important; 
-                max-height: 60vh !important; 
-                width: auto;
-                height: auto;
-            }
+            .main-layout { flex-direction: column; gap: 10px; }
+            .left-sidebar { flex-direction: column; align-items: center; order: 1; }
+            .head-list, .food-list { flex-direction: row; justify-content: center; }
+            .right-sidebar { flex-direction: row; justify-content: center; order: 2; width: 100%; }
+            .game-container { order: 3; }
+            .controls-row { order: 4; }
+            canvas { max-height: 40vh; }
         }
 
-        /* 蛇頭圈圈 (55px) */
+        /* 蛇頭圈圈 (原尺寸) */
         .circle { 
             width: 55px; height: 55px; 
             border: 2px solid #d1b3e0; border-radius: 50%; 
@@ -69,28 +61,28 @@
         .level-num { position: absolute; font-weight: bold; color: #d1b3e0; z-index: 2; font-size: 14px; }
         .circle.active .level-num { display: none; }
 
-        /* 水果小圈圈 (40px) */
+        /* 水果圈圈 (1/3 尺寸) */
         .food-circle { 
-            width: 40px; height: 40px; 
+            width: 45px; height: 45px; 
             border: 1.5px solid #d1b3e0; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
             background: white; overflow: hidden;
         }
-        .food-circle img { width: 85%; height: 85%; object-fit: contain; }
+        .food-circle img { width: 80%; height:80%; object-fit: contain; }
 
         .game-container { 
-            padding: 8px; 
+            padding: 12px; 
             background: #d1b3e0; 
             border-radius: 20px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            position: relative; 
         }
         
-        canvas { background: #000; border-radius: 8px; display: block; max-width: 80vw; height: auto; }
-        
+        canvas { background: #000; border-radius: 8px; display: block; max-width: 85vw; height: auto; }
         .score-display { font-size: 26px; color: #555; font-weight: 500; }
         #startBtn { padding: 10px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; }
 
-        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
         .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
 
         #eggModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
@@ -98,7 +90,9 @@
         .modal-content img { max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
         #continueBtn { padding: 12px 25px; background: #6c5ce7; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-family: 'Kiwi Maru', serif; }
         
-        .footer { margin-top: 5px; font-size: 12px; color: #999; letter-spacing: 4px; }
+        /* 計數器樣式 */
+        .footer { margin-top: 10px; font-size: 12px; color: #999; letter-spacing: 2px; text-align: center; }
+        .counter-img { vertical-align: middle; margin-left: 5px; height: 20px; }
     </style>
 </head>
 <body>
@@ -143,13 +137,14 @@
         <div class="modal-content">
             <h2 id="modalTitle">🌟 恭喜發財！</h2>
             <img id="modalImg" src="surprise.png">
-            <p id="modalDesc">按方向鍵繼續挑戰</p>
-            <button id="continueBtn">確認</button>
+            <p id="modalDesc">厲害!按方向鍵繼續收集50分的終極彩蛋!!</p>
+            <button id="continueBtn">幸運鈕</button>
         </div>
     </div>
 
-    <div class="footer">© 林玉琴 2026 虛幻彼方</div>
-
+    <div class="footer"> © 林玉琴 2026 虛幻彼方</div>
+                         <img class="counter-img" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Flyuchin.github.io%2Fyuchin%2F&count_bg=%23D1B3E0&title_bg=%236C5CE7&icon=&icon_color=%23E7E7E7&title=VISITS&edge_flat=false" alt="計數器">
+    </div>
     <script>
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
@@ -217,15 +212,8 @@
         function draw() {
             if(isWaiting || eggModal.style.display === "flex") return;
             ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 畫水果
             let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) {
-                // 這裡稍微放大了水果尺寸 (32) 並置中
-                let foodSize = 32;
-                let offset = (foodSize - box) / 2;
-                ctx.drawImage(curFood, food.x - offset, food.y - offset, foodSize, foodSize);
-            }
+            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
             else { ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box); }
 
             for(let i = 0; i < snake.length; i++) {
@@ -298,11 +286,7 @@
             let curHead = heads[Math.min(level, 5)];
             if(curHead && curHead.complete) ctx.drawImage(curHead, snake[0].x - offset, snake[0].y - offset, headSize, headSize);
             let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) {
-                let foodSize = 32;
-                let offsetFood = (foodSize - box) / 2;
-                ctx.drawImage(curFood, food.x - offsetFood, food.y - offsetFood, foodSize, foodSize);
-            }
+            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
         }
 
         continueBtn.onclick = function() {
@@ -330,4 +314,4 @@
     </script>
 </body>
 </html>
-     
+   
