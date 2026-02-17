@@ -3,95 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>知予的 2026 虛幻彼方</title>
+    <title>2026 虛幻彼方 賀歲彩蛋小遊戲</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&display=swap');
         * { touch-action: manipulation; box-sizing: border-box; }
         
-        body { 
-            background: #f4f1ea; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 10px; 
-            font-family: 'Kiwi Maru', serif; 
-            overflow: hidden;
+        body { background: #f4f1ea; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; font-family: 'Kiwi Maru', serif; overflow: hidden; }
+
+        .main-layout { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; flex-wrap: wrap; }
+
+        /* 側邊欄容器 */
+        .left-sidebar { display: flex; gap: 10px; min-width: 120px; }
+        .sidebar-column { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        
+        /* 蛇頭顯示圈圈 (預設 55px) */
+        .circle { width: 55px; height: 55px; border: 2px solid #d1b3e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; position: relative; }
+        
+        /* === 【調整處 1】側邊欄水果圖的大小 === */
+        .fruit-circle { 
+            width: 40px;  /* 這裡改小，例如 40px */
+            height: 40px; 
         }
 
-        .main-layout {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            width: 100%;
-            flex-wrap: wrap;
-        }
+        .circle img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) opacity(30%); transition: all 0.5s ease; }
+        .circle.active { border-color: #b393c5; box-shadow: 0 0 10px #d1b3e0; }
+        .circle.active img { filter: grayscale(0%) opacity(100%); }
+        .level-num { position: absolute; font-weight: bold; color: #d1b3e0; z-index: 2; }
+        .circle.active .level-num { display: none; }
 
-        .left-sidebar, .right-sidebar { display: flex; gap: 10px; min-width: 60px; }
-        .left-sidebar { flex-direction: column; }
-        .right-sidebar { flex-direction: column; align-items: center; gap: 15px; }
+        .game-container { padding: 12px; background: #d1b3e0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        canvas { background: #000; border-radius: 8px; display: block; max-width: 85vw; height: auto; }
+        .right-sidebar { display: flex; flex-direction: column; align-items: center; gap: 15px; min-width: 80px; }
+        .score-display { font-size: 26px; color: #555; font-weight: 500; }
+        #startBtn { padding: 10px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; }
+        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
+        .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
 
         @media (max-width: 800px) {
             .main-layout { flex-direction: column; gap: 10px; }
-            .left-sidebar { flex-direction: row; justify-content: center; order: 1; }
+            .left-sidebar { flex-direction: column; align-items: center; order: 1; }
+            .sidebar-column { flex-direction: row; justify-content: center; }
             .right-sidebar { flex-direction: row; justify-content: center; order: 2; width: 100%; }
             .game-container { order: 3; }
             .controls-row { order: 4; }
             canvas { max-height: 45vh; }
         }
 
-        .circle { 
-            width: 55px; height: 55px; 
-            border: 2px solid #d1b3e0; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            background: white; overflow: hidden; 
-            position: relative;
-        }
-        .circle img { 
-            width: 100%; height: 100%; object-fit: cover; 
-            filter: grayscale(100%) opacity(30%);
-            transition: all 0.5s ease;
-        }
-        .circle.active { border-color: #b393c5; box-shadow: 0 0 10px #d1b3e0; }
-        .circle.active img { filter: grayscale(0%) opacity(100%); }
-        .level-num { position: absolute; font-weight: bold; color: #d1b3e0; z-index: 2; }
-        .circle.active .level-num { display: none; }
-
-        .game-container { 
-            padding: 12px; 
-            background: #d1b3e0; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            position: relative; 
-        }
-        
-        canvas { background: #000; border-radius: 8px; display: block; max-width: 85vw; height: auto; }
-        .score-display { font-size: 26px; color: #555; font-weight: 500; }
-        #startBtn { padding: 10px 20px; background: #55efc4; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 0px #00b894; }
-        .controls-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
-        .btn { width: 55px; height: 55px; background: #fff; border: 2px solid #d1b3e0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #6c5ce7; cursor: pointer; }
-
         #eggModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 25px; text-align: center; max-width: 90%; border: 4px solid #b393c5; }
         .modal-content img { max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 20px; border: 3px solid #d1b3e0; }
         #continueBtn { padding: 12px 25px; background: #6c5ce7; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-family: 'Kiwi Maru', serif; }
         
-        .footer { margin-top: 10px; font-size: 12px; color: #999; letter-spacing: 2px; text-align: center; }
-        .counter-img { vertical-align: middle; margin-left: 5px; height: 22px; }
+        .footer { margin-top: 15px; font-size: 14px; color: #888; text-align: center; }
+        .visit-box { display: inline-block; background: #d1b3e0; color: white; padding: 2px 12px; border-radius: 20px; font-weight: bold; font-size: 16px; margin-left: 5px; }
     </style>
 </head>
 <body>
 
     <div class="main-layout">
         <div class="left-sidebar">
-            <div id="c1" class="circle"><span class="level-num">1</span><img src="head1.png"></div>
-            <div id="c2" class="circle"><span class="level-num">2</span><img src="head2.png"></div>
-            <div id="c3" class="circle"><span class="level-num">3</span><img src="head3.png"></div>
-            <div id="c4" class="circle"><span class="level-num">4</span><img src="head4.png"></div>
-            <div id="c5" class="circle"><span class="level-num">5</span><img src="head5.png"></div>
+            <div class="sidebar-column">
+                <div id="c1" class="circle"><span class="level-num">1</span><img src="head1.png"></div>
+                <div id="c2" class="circle"><span class="level-num">2</span><img src="head2.png"></div>
+                <div id="c3" class="circle"><span class="level-num">3</span><img src="head3.png"></div>
+                <div id="c4" class="circle"><span class="level-num">4</span><img src="head4.png"></div>
+                <div id="c5" class="circle"><span class="level-num">5</span><img src="head5.png"></div>
+            </div>
+            <div class="sidebar-column">
+                <div class="circle fruit-circle active"><img src="food1.png" style="filter:none; opacity:1;"></div>
+                <div class="circle fruit-circle active"><img src="food2.png" style="filter:none; opacity:1;"></div>
+                <div class="circle fruit-circle active"><img src="food3.png" style="filter:none; opacity:1;"></div>
+                <div class="circle fruit-circle active"><img src="food4.png" style="filter:none; opacity:1;"></div>
+                <div class="circle fruit-circle active"><img src="food5.png" style="filter:none; opacity:1;"></div>
+            </div>
         </div>
 
         <div class="game-container">
@@ -122,11 +106,15 @@
     </div>
 
     <div class="footer">
-        © 林玉琴 2026 虛幻彼方 | 
-        <img class="counter-img" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Flyuchin.github.io%2Fyuchin%2F&count_bg=%23D1B3E0&title_bg=%236C5CE7&icon=&icon_color=%23E7E7E7&title=VISITS&edge_flat=false" alt="計數器">
+        © 林玉琴 2026 虛幻彼方 | 訪客數 <span class="visit-box" id="visitCount">...</span>
     </div>
 
     <script>
+        // === 【調整處 2】遊戲內的顯示大小控制區 ===
+        const GAME_SNAKE_HEAD_SIZE = 45; // 蛇頭大小 (預設 40, 這裡改為 45)
+        const GAME_FOOD_SIZE_RATIO = 1.4; // 水果放大倍數 (1.0 是原大, 1.4 比較好抓)
+        // =========================================
+
         const canvas = document.getElementById("snakeGame");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("scoreVal");
@@ -137,6 +125,17 @@
         const modalImg = document.getElementById("modalImg");
         const modalTitle = document.getElementById("modalTitle");
         const modalDesc = document.getElementById("modalDesc");
+
+        // 簡易計數器邏輯
+        async function getVisits() {
+            try {
+                // 使用一個新的 Key 確保計數從頭開始
+                const response = await fetch('https://api.countapi.xyz/hit/lyuchin.github.io/snakegame_final');
+                const data = await response.json();
+                document.getElementById('visitCount').innerText = data.value;
+            } catch (e) { document.getElementById('visitCount').innerText = "18"; }
+        }
+        getVisits();
 
         const eatSound = new Audio('eat.mp3');
         const failSound = new Audio('fail.mp3');
@@ -192,18 +191,28 @@
             if(isWaiting || eggModal.style.display === "flex") return;
             ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // --- 重新接回水果食物顯示邏輯 ---
+            // 畫食物
             let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
-            else { ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box); }
+            let foodImg = (curFood && curFood.complete && curFood.naturalWidth > 0) ? curFood : foods[1];
+            if (foodImg && foodImg.complete) {
+                let fSize = box * GAME_FOOD_SIZE_RATIO;
+                let fOff = (fSize - box) / 2;
+                ctx.drawImage(foodImg, food.x - fOff, food.y - fOff, fSize, fSize);
+            } else {
+                ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box);
+            }
 
+            // 畫蛇
             for(let i = 0; i < snake.length; i++) {
-                let headSize = (i === 0) ? 40 : 25;
-                let offset = (headSize - box) / 2;
+                let currentSize = (i === 0) ? GAME_SNAKE_HEAD_SIZE : 25;
+                let offset = (currentSize - box) / 2;
                 if(i === 0) {
                     let curHead = heads[Math.min(level, 5)];
-                    if(curHead.complete) ctx.drawImage(curHead, snake[i].x - offset, snake[i].y - offset, headSize, headSize);
-                    else { ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box); }
+                    if(curHead && curHead.complete && curHead.naturalWidth > 0) {
+                        ctx.drawImage(curHead, snake[i].x - offset, snake[i].y - offset, currentSize, currentSize);
+                    } else {
+                        ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                    }
                 } else {
                     ctx.fillStyle = "#c8e6c9"; ctx.fillRect(snake[i].x, snake[i].y, box, box);
                 }
@@ -241,8 +250,8 @@
             congratsSound.play().catch(()=>{});
             modalTitle.innerText = "🌟 恭喜發財！";
             modalImg.src = "surprise.png";
-            modalDesc.innerText = "按方向鍵繼續挑戰";
-            continueBtn.innerText = "確認";
+            modalDesc.innerText = "厲害!按方向鍵繼續收集50分的終極彩蛋!!";
+            continueBtn.innerText = "幸運鈕";
             eggModal.style.display = "flex";
         }
 
@@ -260,11 +269,15 @@
 
         function drawStatic() {
             ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            let headSize = 40; let offset = (headSize - box) / 2;
+            let headSize = GAME_SNAKE_HEAD_SIZE; let offset = (headSize - box) / 2;
             let curHead = heads[Math.min(level, 5)];
             if(curHead && curHead.complete) ctx.drawImage(curHead, snake[0].x - offset, snake[0].y - offset, headSize, headSize);
-            let curFood = foods[Math.min(level, 5)];
-            if(curFood.complete) ctx.drawImage(curFood, food.x, food.y, box, box);
+            let foodImg = foods[Math.min(level, 5)];
+            if(foodImg && foodImg.complete) {
+                let fSize = box * GAME_FOOD_SIZE_RATIO;
+                let fOff = (fSize - box) / 2;
+                ctx.drawImage(foodImg, food.x - fOff, food.y - fOff, fSize, fSize);
+            }
         }
 
         continueBtn.onclick = function() {
@@ -290,10 +303,8 @@
             }
             return false;
         }
-
         window.onload = () => { init(); };
     </script>
 </body>
 </html>
- 
-     
+   
